@@ -1,0 +1,7 @@
+# Nightly sanctions and PEP screening over every open onboarding case.
+# Installed on batch-01.norrbank.internal. Owned by onboarding operations.
+#
+# The run rewrites /var/lib/norrbank/screening/case-stage.dat in full and holds a lock
+# on it for the duration. Nothing else may read the file between 02:00 and 02:05.
+
+0 2 * * *  screening  /opt/norrbank/screening-batch/bin/run.sh >> /var/log/norrbank/screening-batch.log 2>&1
