@@ -1,0 +1,6 @@
+org_no,legal_name,evidence_status,expected_completion,updated_at
+5560112233,Vasa Logistik AB,COMPLETE,,2021-09-06
+5566778899,Bergslagen Industri AB,PENDING,2021-09-24,2021-09-06
+5569001122,Nordkap Shipping AB,UBO_UNCONFIRMED,2021-10-01,2021-09-06
+5562334455,Uppsala Bryggeri AB,COMPLETE,,2021-09-03
+5564556677,Malmö Fastighets AB,PENDING,2021-09-30,2021-09-06
