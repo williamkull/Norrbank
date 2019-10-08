@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "DocumentReceived",
+  "namespace": "se.norrbank.onboarding.events",
+  "doc": "Emitted when a document is filed against a case.",
+  "fields": [
+    { "name": "caseId", "type": "string" },
+    { "name": "documentType", "type": "string" },
+    { "name": "archiveRef", "type": "string" },
+    { "name": "occurredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

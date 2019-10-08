@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "CaseCreated",
+  "namespace": "se.norrbank.onboarding.events",
+  "doc": "Emitted when an onboarding case is opened.",
+  "fields": [
+    { "name": "caseId", "type": "string" },
+    { "name": "orgNo", "type": "string" },
+    { "name": "relationshipManagerId", "type": "string" },
+    { "name": "occurredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

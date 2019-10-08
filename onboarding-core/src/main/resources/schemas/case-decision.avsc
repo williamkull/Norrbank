@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "CaseDecision",
+  "namespace": "se.norrbank.onboarding.events",
+  "doc": "Emitted when a case reaches a terminal lifecycle status.",
+  "fields": [
+    { "name": "caseId", "type": "string" },
+    { "name": "decision", "type": { "type": "enum", "name": "Decision", "symbols": ["APPROVED", "REJECTED", "WITHDRAWN"] } },
+    { "name": "occurredAt", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}
