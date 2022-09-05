@@ -1,0 +1,19 @@
+# API gateway route for the relationship manager workspace.
+
+route:
+  id: rm-workspace
+  host: workspace.norrbank.internal
+  paths:
+    - /**
+  upstream: http://rm-workspace.workspace.svc.cluster.local:8080
+
+authentication:
+  type: sso-jwt
+  issuer: https://sso.norrbank.internal
+  session:
+    injectAs: __NORRBANK_SESSION__
+
+rateLimit:
+  requestsPerSecond: 200
+  burst: 50
+  onExceeded: 429

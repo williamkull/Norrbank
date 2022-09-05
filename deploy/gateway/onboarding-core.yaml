@@ -1,0 +1,32 @@
+# API gateway route for onboarding-core.
+# Managed by the platform team. Changes go through a platform change request.
+
+route:
+  id: onboarding-core
+  host: api.norrbank.internal
+  paths:
+    - /v1/**
+    - /v2/**
+  upstream: http://onboarding-core.onboarding.svc.cluster.local:8080
+
+authentication:
+  type: sso-jwt
+  issuer: https://sso.norrbank.internal
+  forwardClaims:
+    - header: X-Norrbank-User
+      claim: sub
+    - header: X-Norrbank-Department
+      claim: dept
+    - header: X-Norrbank-Roles
+      claim: roles
+
+# Sized against the service's connection pool, not against demand. Raising it is a
+# platform change and needs the onboarding-core owner on the request.
+rateLimit:
+  requestsPerSecond: 50
+  burst: 10
+  onExceeded: 429
+
+timeouts:
+  connectMillis: 2000
+  readMillis: 10000
