@@ -1,0 +1,7 @@
+org_no,legal_name,evidence_status,expected_completion,ubo_name,updated_at
+5560112233,Vasa Logistik AB,COMPLETE,,Astrid Hellström,2026-09-03
+5566778899,Bergslagen Industri AB,PENDING,2026-09-24,Petter Nyholm,2026-09-03
+5569001122,Nordkap Shipping AB,UBO_UNCONFIRMED,2026-10-01,Ingrid Wallenberg-Sund,2026-09-03
+5562334455,Uppsala Bryggeri AB,COMPLETE,,Karl-Johan Lindfors,2026-09-02
+5564556677,Malmö Fastighets AB,PENDING,2026-09-30,Elsa Bergqvist,2026-09-03
+5567889900,Kiruna Mineral AB,UBO_UNCONFIRMED,2026-10-15,,2026-09-03
