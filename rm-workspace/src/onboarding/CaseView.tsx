@@ -1,5 +1,6 @@
 import type { CaseSummary } from "./api";
 import { Panel } from "../shared/Panel";
+import { StatusPanel } from "./StatusPanel";
 import { formatDate, formatOrgNo, lifecycleLabel } from "../shared/formatting";
 
 interface CaseViewProps {
@@ -15,6 +16,8 @@ export function CaseView({ onboardingCase }: CaseViewProps) {
           {onboardingCase.caseId} · {formatOrgNo(onboardingCase.orgNo)}
         </p>
       </header>
+
+      <StatusPanel caseId={onboardingCase.caseId} />
 
       <Panel title="Case">
         <dl className="detail">

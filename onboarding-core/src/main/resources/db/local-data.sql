@@ -76,3 +76,37 @@ insert into screening_result (case_id, party_ref, list_name, outcome, run_date) 
   ('ONB-2026-004133', 'Elsa Bergqvist',         'EU_CONSOLIDATED_SANCTIONS', 'CLEAR',          timestamp '2026-09-05 02:03:00'),
   ('ONB-2026-004133', 'Elsa Bergqvist',         'PEP_GLOBAL',                'CLEAR',          timestamp '2026-09-05 02:03:00'),
   ('ONB-2026-004140', 'Tuomas Rantanen',        'OFAC_SDN',                  'PENDING_REVIEW', timestamp '2026-09-05 02:03:00');
+
+-- ONB-2140. registry_evidence belongs to registry-link and arrives with its own schema.sql
+-- in every deployed environment; the local profile builds its shape from entities only, so
+-- the table has to be made here before it can be seeded. Without these rows the status
+-- panel cannot be run or seen locally at all.
+create table if not exists registry_evidence (
+    org_no              varchar(12) primary key,
+    legal_name          varchar(200) not null,
+    evidence_status     varchar(30)  not null,
+    expected_completion date,
+    ubo_name            varchar(200),
+    updated_at          date         not null
+);
+
+insert into registry_evidence (org_no, legal_name, evidence_status, expected_completion, ubo_name, updated_at) values
+  ('5560112233', 'Vasa Logistik AB',       'REGISTRY_COMPLETE', null,              'Astrid Hellström',       date '2026-06-28'),
+  ('5566778899', 'Bergslagen Industri AB', 'REGISTRY_PENDING',  date '2026-09-24', 'Petter Nyholm',          date '2026-09-04'),
+  ('5569001122', 'Nordkap Shipping AB',    'UBO_UNCONFIRMED',   date '2026-09-16', 'Ingrid Wallenberg-Sund', date '2026-09-04'),
+  ('5562334455', 'Uppsala Bryggeri AB',    'REGISTRY_COMPLETE', null,              'Karl-Johan Lindfors',    date '2026-07-07'),
+  ('5564556677', 'Malmö Fastighets AB',    'REGISTRY_PENDING',  date '2026-09-08', 'Elsa Bergqvist',         date '2026-09-04'),
+  ('5567889900', 'Kiruna Mineral AB',      'UBO_UNCONFIRMED',   date '2026-09-30', 'Tuomas Rantanen',        date '2026-09-04'),
+  ('5561223344', 'Gävle Kraft & Värme AB', 'REGISTRY_PENDING',  null,              null,                     date '2026-09-04'),
+  ('5568990011', 'Skagerrak Offshore AB',  'REGISTRY_PENDING',  null,              null,                     date '2026-09-04');
+
+-- The stage the run of 2026-09-05 left behind, one row per open case. Written by
+-- screening_batch in every environment; seeded here so a local workspace has something to
+-- show. The stages are what ScreeningRules derives from the screening_result rows above.
+insert into case_stage (case_id, stage, procedure_stage_code, expected_decision_date, stage_since, run_id, derived_at) values
+  ('ONB-2026-004112', 'AWAITING_REGISTRY_EVIDENCE', 'EDD-PENDING',   null,              timestamp '2026-08-22 02:03:00', 'a1b2c3d4', timestamp '2026-09-05 02:03:00'),
+  ('ONB-2026-004119', 'UNDER_ANALYST_REVIEW',       'PEP-REVIEW',    date '2026-09-12', timestamp '2026-09-02 02:03:00', 'a1b2c3d4', timestamp '2026-09-05 02:03:00'),
+  ('ONB-2026-004133', 'READY_FOR_DECISION',         'EDD-COMPLETE',  date '2026-09-06', timestamp '2026-09-04 02:03:00', 'a1b2c3d4', timestamp '2026-09-05 02:03:00'),
+  ('ONB-2026-004140', 'ON_HOLD',                    'SAN-HOLD',      null,              timestamp '2026-08-28 02:03:00', 'a1b2c3d4', timestamp '2026-09-05 02:03:00'),
+  ('ONB-2026-004148', 'DOCUMENTS_OUTSTANDING',      'SCR-QUEUED',    date '2026-09-10', timestamp '2026-09-05 02:03:00', 'a1b2c3d4', timestamp '2026-09-05 02:03:00'),
+  ('ONB-2026-004155', 'DOCUMENTS_OUTSTANDING',      'SCR-QUEUED',    date '2026-09-10', timestamp '2026-09-05 02:03:00', 'a1b2c3d4', timestamp '2026-09-05 02:03:00');

@@ -9,21 +9,20 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\""
+    "test:e2e": "playwright test",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.48.0",
     "@testing-library/react": "16.0.1",
     "@types/react": "18.3.11",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.3.2",
     "happy-dom": "15.7.4",
-    "prettier": "3.3.3",
     "typescript": "5.6.3",
     "vite": "5.4.9",
     "vitest": "2.1.3"
