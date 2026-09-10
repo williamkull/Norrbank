@@ -47,6 +47,31 @@
           </compilerArgs>
         </configuration>
       </plugin>
+
+      <!--
+        PLAT-771. Spotless is here so .claude/hooks/format.sh can format one file:
+
+          ./mvnw -q -pl <module> spotless:apply -DspotlessFiles=<regex>
+
+        Deliberately bound to no lifecycle phase. Fifteen years of this estate predate any
+        formatter, so a check bound to the build would fail on files nobody has touched,
+        and an apply bound to the build would rewrite most of the estate in whichever
+        commit happened to run next. Files get formatted when they are edited and not
+        before, which is the only way the diff stays about the change.
+      -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.43.0</version>
+        <configuration>
+          <java>
+            <googleJavaFormat>
+              <version>1.22.0</version>
+              <style>AOSP</style>
+            </googleJavaFormat>
+          </java>
+        </configuration>
+      </plugin>
     </plugins>
 
     <pluginManagement>

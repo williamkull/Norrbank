@@ -1,0 +1,3 @@
+# Written by bin/fix-task. Local to a working copy: whether a fix task is open here says
+# nothing to anyone else, and committing it would hold the tests read-only for everybody.
+fix-task.marker
