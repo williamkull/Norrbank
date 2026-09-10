@@ -46,3 +46,5 @@ dl.detail dd { margin: 0; }
 .subdued { color: var(--subdued); }
 .empty { color: var(--subdued); font-style: italic; }
 .error { color: #a4262c; }
+
+.status-panel .procedure-code { display: block; font-size: 12px; margin-top: 2px; }
