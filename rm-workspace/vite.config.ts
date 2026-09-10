@@ -15,5 +15,8 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     globals: true,
+    // e2e/ is Playwright's, run by `bun run test:e2e`. Vitest would otherwise pick the
+    // spec up by its name and fail on an import it has no browser for.
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
 });
