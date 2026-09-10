@@ -1,7 +1,11 @@
 package se.norrbank.screening.job;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -29,6 +33,9 @@ import se.norrbank.screening.stage.StageFileWriter;
 public class ScreeningBatchJob {
 
     private static final Logger log = LoggerFactory.getLogger(ScreeningBatchJob.class);
+
+    /** How long to wait before the one retry on a stage file lock held by another host. */
+    private static final Duration LOCK_RETRY_DELAY = Duration.ofSeconds(30);
 
     private final BatchConfiguration configuration;
     private final ScreeningListProvider listProvider;
@@ -70,11 +77,35 @@ public class ScreeningBatchJob {
             stages.add(new StageFileRecord(openCase.caseId(), stage, expectedDecision(stage), runId));
         }
 
+        // Before the lock, deliberately. The stage list is complete by here, so the table
+        // write adds nothing to the window operations schedules other work around. Its own
+        // try/catch, because the stage file — not this table — is the run's contract, and a
+        // run that aborts here would leave the ops console serving yesterday's stages.
+        try {
+            new StageWriter(connection).write(stages, runDate, runId);
+        } catch (SQLException tableFailure) {
+            log.error("case_stage write failed for run {}; the stage file write continues", runId, tableFailure);
+        }
+
         StageFileWriter writer = new StageFileWriter(configuration.stageFilePath());
-        try (StageFileLock ignored = StageFileLock.acquire(configuration.stageFilePath())) {
+        try (StageFileLock ignored = acquireLock(configuration.stageFilePath())) {
             writer.writeAll(stages);
         }
         return stages.size();
+    }
+
+    /**
+     * Takes the stage file lock, retrying once. A lock held by a job on another host clears
+     * or it does not; a second attempt covers the first case and failing covers the second.
+     */
+    private static StageFileLock acquireLock(Path stageFile) throws IOException, InterruptedException {
+        try {
+            return StageFileLock.acquire(stageFile);
+        } catch (IOException held) {
+            log.warn("stage file is locked, retrying once in {}", LOCK_RETRY_DELAY);
+            Thread.sleep(LOCK_RETRY_DELAY.toMillis());
+            return StageFileLock.acquire(stageFile);
+        }
     }
 
     /**
