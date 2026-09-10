@@ -1,0 +1,111 @@
+# PLAT-770. What Jenkins job `onboarding-estate-ci` used to do, in the repository.
+#
+# The rule the estate already had (see the Makefile) is that CI runs the make targets and
+# nothing of its own. Anything that passes locally passes here; anything that does not is
+# the pipeline being right. So `build` below is three lines of `make` and no cleverness.
+#
+# The two suites that cannot run inside `make test` get a job each:
+#
+#   playwright  the workspace's own browser tests. They need a browser download, which is
+#               not something a developer's `make test` should do behind their back.
+#   selenium    the legacy suite, moved in from the old Jenkins slave. It lives outside the
+#               Maven reactor on purpose — see rm-workspace-e2e/README.md — so it can only
+#               be run deliberately, here or by hand.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build · test · lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+
+      - run: make build
+      - run: make test
+      - run: make lint
+
+  playwright:
+    name: e2e (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+
+      # The suite arrives with the change that adds the status panel. Until it does there is
+      # nothing to run, and this says so in the log rather than passing quietly: a job that
+      # goes green having done nothing is worse than a job that is not there.
+      - name: Playwright suite
+        run: |
+          set -euo pipefail
+          if [ ! -d rm-workspace/e2e ]; then
+            echo "SKIPPED: rm-workspace/e2e does not exist in this tree."
+            echo "The Playwright suite lands with the workspace change that needs it."
+            echo "playwright: 0 tests, suite absent"
+            exit 0
+          fi
+          cd rm-workspace
+          bun install --frozen-lockfile
+          bunx playwright install --with-deps chromium
+          bun run test:e2e
+
+  selenium:
+    name: legacy e2e (Selenium)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+
+      # The suite drives the built bundle, not the dev server, because that is what the old
+      # Jenkins job did and what staging serves.
+      - name: Build the workspace bundle
+        run: |
+          cd rm-workspace
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Chrome
+        run: |
+          google-chrome --version
+          echo "chromedriver is resolved by Selenium Manager against the browser above"
+
+      - name: Selenium suite
+        run: ./mvnw -B -f rm-workspace-e2e/pom.xml -Pe2e test
+        env:
+          NORRBANK_E2E_HEADLESS: "1"

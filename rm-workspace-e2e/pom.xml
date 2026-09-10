@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    Deliberately not a module of the root reactor and deliberately without a parent.
+
+    The estate's Makefile is the contract with every developer: `make build`, `make test`,
+    `make lint`, and nothing in them that needs a browser. Putting this suite in
+    <modules> would have put a Chrome download inside `make build` for everybody. It is
+    run by its own file, by the pipeline or by hand:
+
+      ./mvnw -B -f rm-workspace-e2e/pom.xml -Pe2e test
+
+    Without -Pe2e the tests are skipped, so a stray `mvn test` in this directory cannot
+    start a browser by accident either.
+  -->
+
+  <groupId>se.norrbank</groupId>
+  <artifactId>rm-workspace-e2e</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>RM workspace end-to-end suite</name>
+  <description>
+    Browser tests for the relationship manager workspace case list. Written in 2019 against
+    the Jenkins slave's own Firefox, moved to Chrome and Selenium 4 when PLAT-390 took the
+    estate to Java 21. The shape is still the shape it was: JUnit 4, one page object, one
+    stub of the API the workspace calls.
+  </description>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <selenium.version>4.25.0</selenium.version>
+    <junit.version>4.13.2</junit.version>
+    <!-- Off unless -Pe2e says otherwise. -->
+    <skipTests>true</skipTests>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>${selenium.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <skipTests>${skipTests}</skipTests>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>e2e</id>
+      <properties>
+        <skipTests>false</skipTests>
+      </properties>
+    </profile>
+  </profiles>
+</project>

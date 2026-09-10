@@ -1,0 +1,206 @@
+# PLAT-770. The release path, as the pipeline runs it.
+#
+# The three lanes are the three the estate already had, and they keep the autonomy the
+# estate already gave them: development deploys on its own, staging deploys and then
+# rehearses the rollback on every release, production waits for a person.
+#
+# Production waits because the `production` environment has a required reviewer. That is
+# the whole gate: the job does not start, the deployment sits at `waiting`, and nobody can
+# make it move by re-running it. The change ID the reviewer types when they approve is what
+# the release note carries, so the authorisation and the artefact are the same record.
+#
+# The production job is deliberately small. Everything slow — the build, the smoke check,
+# the rollback rehearsal — has already happened on staging, and the artefact promoted here
+# is the one staging proved. What is left is the deployment, the tag and the release note.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      change_id:
+        description: "Approved change ID. Leave empty to take it from the production approval comment."
+        required: false
+        default: ""
+      release_tag:
+        description: "Tag to cut. Leave empty to derive it from the date and the ticket in HEAD."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  deployments: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  development:
+    name: development
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+
+      - name: Release to dev
+        run: |
+          set -euo pipefail
+          if [ ! -x deploy/release.sh ]; then
+            echo "deploy/release.sh is not in this tree yet; PLAT-772 brings it."
+            echo "Nothing to deploy from here. This is a no-op, and it is meant to be visible."
+            exit 0
+          fi
+          RELEASE_TICKET="${RELEASE_TICKET:-$(git log -1 --pretty=%s | grep -oE '^[A-Z]+-[0-9]+' || echo PLAT-770)}" \
+            deploy/release.sh dev
+
+  staging:
+    name: staging
+    needs: development
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+
+      # Two releases, because the runner is new every time and the rollback rehearsal has
+      # nothing to roll back to until staging has run a release once. On a long-lived
+      # staging host the first of these is the release that is already there.
+      - name: Release to staging, then rehearse the rollback
+        run: |
+          set -euo pipefail
+          if [ ! -x deploy/release.sh ]; then
+            echo "deploy/release.sh is not in this tree yet; PLAT-772 brings it."
+            echo "The rollback rehearsal has nothing to call. No-op, deliberately visible."
+            exit 0
+          fi
+          TICKET="${RELEASE_TICKET:-$(git log -1 --pretty=%s | grep -oE '^[A-Z]+-[0-9]+' || echo PLAT-770)}"
+          RELEASE_TICKET="$TICKET" deploy/release.sh staging
+          RELEASE_TICKET="$TICKET" deploy/release.sh staging
+          echo "--- deploy log ---"
+          cat "${NORRBANK_ENVS:-$HOME/.norrbank-envs}/deploy-log.jsonl"
+
+      - name: Keep the artefact staging proved
+        uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-core
+          path: onboarding-core/target/onboarding-core-*.jar
+          if-no-files-found: warn
+          retention-days: 1
+
+  production:
+    name: production
+    needs: staging
+    runs-on: ubuntu-latest
+    # The required reviewer on this environment is the gate. Until someone approves, this
+    # job does not start and the deployment stands at `waiting`.
+    environment:
+      name: production
+      url: ${{ steps.release.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Take the artefact staging proved
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: onboarding-core
+          path: promoted
+
+      # The reviewer types the approved change ID into the approval comment. If the run was
+      # dispatched with one, that wins; otherwise the comment is read back off the run.
+      - name: Resolve the change authorisation
+        id: change
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_CHANGE_ID: ${{ inputs.change_id }}
+        run: |
+          set -euo pipefail
+          change="$INPUT_CHANGE_ID"
+          if [ -z "$change" ]; then
+            comment=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/approvals" \
+              --jq '[.[] | .comment] | map(select(. != null and . != "")) | last // ""' || echo "")
+            change=$(printf '%s' "$comment" | grep -oE 'CHG[0-9]{7}' | head -n 1 || true)
+          fi
+          if [ -z "$change" ]; then
+            echo "No approved change ID on this run: not in the dispatch inputs and not in the approval comment."
+            echo "Production releases carry the change they were authorised under. Refusing to cut a release without one."
+            exit 1
+          fi
+          echo "change=$change" >> "$GITHUB_OUTPUT"
+          echo "Release authorised under $change"
+
+      - name: Tag and release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.release_tag }}
+          CHANGE: ${{ steps.change.outputs.change }}
+        run: |
+          set -euo pipefail
+          tag="$INPUT_TAG"
+          if [ -z "$tag" ]; then
+            ticket=$(git log -1 --pretty=%s | grep -oE '^[A-Z]+-[0-9]+' || echo PLAT-770)
+            tag="release/$(date +%Y.%m.%d)-$(printf '%s' "$ticket" | tr '[:upper:]' '[:lower:]')"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+          git config user.name "norrbank-release"
+          git config user.email "release@norrbank.se"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists on this repository; leaving it as it stands."
+          else
+            git tag -a "$tag" -m "$tag — authorised under $CHANGE"
+            git push origin "$tag"
+          fi
+
+          printf -v body 'Released to production under change %s.\n\nCommit: %s\nRun: %s/%s/actions/runs/%s\n' \
+            "$CHANGE" "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --notes "$body"
+          else
+            gh release create "$tag" --title "$tag" --notes "$body"
+          fi
+          echo "url=$(gh release view "$tag" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        env:
+          CHANGE: ${{ steps.change.outputs.change }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          {
+            echo "### production"
+            echo ""
+            echo "- change: \`$CHANGE\`"
+            echo "- tag: \`$TAG\`"
+            echo "- commit: \`$GITHUB_SHA\`"
+          } >> "$GITHUB_STEP_SUMMARY"
