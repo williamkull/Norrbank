@@ -45,7 +45,10 @@ public class CaseStatusService {
     public CaseStatus forCase(String caseId) {
         CaseStageValue stage = stages.currentStage(caseId);
         if (stage == CaseStageValue.AWAITING_REGISTRY_EVIDENCE) {
-            return new CaseStatus(caseId, stage, null, null);
+            String orgNo = cases.require(caseId).getOrgNo();
+            return registryEvidence.expectedCompletionFor(orgNo)
+                    .map(date -> new CaseStatus(caseId, stage, date, "registry-evidence"))
+                    .orElseGet(() -> new CaseStatus(caseId, stage, null, null));
         }
         if (stage == CaseStageValue.SCREENING_IN_PROGRESS) {
             return new CaseStatus(caseId, stage, nextScreeningRun(), "screening");
