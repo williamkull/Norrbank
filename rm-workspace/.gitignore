@@ -1,0 +1,3 @@
+# Playwright's run output. The report is an artefact of a run, not of the repository.
+test-results/
+playwright-report/
