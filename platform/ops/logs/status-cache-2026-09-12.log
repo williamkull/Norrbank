@@ -1,0 +1,17 @@
+2026-09-11T18:44:12+02:00 INFO  [status-cache] cache enabled, keyed by case and caller, stage source polled every 5m, entries 0
+2026-09-11T18:44:19+02:00 INFO  [status-cache] fill ONB-2026-004112, miss, 38ms
+2026-09-11T19:30:00+02:00 INFO  [status-cache] 2104 entries, hit rate 71% over the last 15m
+2026-09-11T20:12:44+02:00 INFO  [status-cache] 2338 entries, last fill of the working day
+2026-09-11T23:00:00+02:00 INFO  [status-cache] 2338 entries, poll sees no change
+2026-09-12T01:55:00+02:00 INFO  [status-cache] 2338 entries, poll sees no change
+2026-09-12T02:00:00+02:00 INFO  [status-cache] 2338 entries, poll sees no change
+2026-09-12T02:05:00+02:00 WARN  [status-cache] stage source last-changed moved, dropping all 2338 entries in one pass
+2026-09-12T02:05:01+02:00 INFO  [status-cache] entries 0, nothing scheduled to refill them
+2026-09-12T07:00:06+02:00 INFO  [status-cache] fill ONB-2026-004101, miss, 44ms
+2026-09-12T07:10:00+02:00 INFO  [status-cache] 2616 entries, hit rate 18% over the last 5m
+2026-09-12T07:14:02+02:00 WARN  [status-cache] hit rate 22% over the last 60s, every miss is a gateway call
+2026-09-12T07:14:51+02:00 WARN  [status-cache] upstream returned 429 for ONB-2026-004119, no retry
+2026-09-12T07:20:00+02:00 WARN  [status-cache] 10734 entries, hit rate 27%, 429s continuing
+2026-09-12T07:30:00+02:00 INFO  [status-cache] 19043 entries, hit rate 34%, 429s falling away
+2026-09-12T07:45:00+02:00 INFO  [status-cache] 29790 entries, hit rate 43%, 429s down to a few seconds
+2026-09-12T08:30:00+02:00 INFO  [status-cache] 54388 entries, hit rate 59%
