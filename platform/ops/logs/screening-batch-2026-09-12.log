@@ -1,0 +1,9 @@
+2026-09-12T02:00:03+02:00 INFO  [screening-batch] starting nightly screening run
+2026-09-12T02:00:04+02:00 INFO  [screening-batch] stage file lock taken on /var/lib/norrbank/screening/case-stage.dat
+2026-09-12T02:00:06+02:00 INFO  [screening-batch] 11842 open cases selected for screening
+2026-09-12T02:00:51+02:00 INFO  [screening-batch] sanctions and PEP lists loaded, 4 lists
+2026-09-12T02:02:19+02:00 INFO  [screening-batch] 11842 party results written to screening_result
+2026-09-12T02:03:25+02:00 INFO  [screening-batch] stage file rewritten in full, 11842 cases restaged
+2026-09-12T02:03:51+02:00 WARN  [screening-batch] every case was rewritten; this job has no incremental path
+2026-09-12T02:03:55+02:00 INFO  [screening-batch] stage file lock released after 231s
+2026-09-12T02:03:56+02:00 INFO  [screening-batch] run complete, expected runtime 4m, actual 3.9m

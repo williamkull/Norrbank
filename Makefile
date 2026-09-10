@@ -25,6 +25,7 @@ build: check-java
 
 test: check-java
 	$(MVN) test
+	bun test platform/
 	cd $(WORKSPACE) && bun install --frozen-lockfile && bun run test
 
 lint: check-java

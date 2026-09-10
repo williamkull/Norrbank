@@ -1,0 +1,11 @@
+{
+  "metric": "post_deploy_error_rate",
+  "windowMinutes": 5,
+  "minRequests": 100,
+  "days": 30,
+  "from": "2026-08-13",
+  "to": "2026-09-11",
+  "samples": 750,
+  "mean": 0.006985,
+  "sigma": 0.020696
+}
