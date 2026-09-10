@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Open and close a fix task.
+#
+# A fix task is the workflow where a bug is reproduced as a failing test, the test is
+# committed, and only then is the code changed. While the task is open the test-lock hook
+# holds every test file read-only, so the fix cannot move the check it is measured against.
+#
+#   bin/fix-task begin      open the task
+#   bin/fix-task end        close it
+#   bin/fix-task status     say whether one is open
+#
+# The marker is local to the working copy and is not committed.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+marker="$root/.claude/fix-task.marker"
+
+case "${1:-status}" in
+  begin)
+    mkdir -p "$(dirname "$marker")"
+    date -u +"opened %Y-%m-%dT%H:%M:%SZ" > "$marker"
+    echo "Fix task open. Test files are read-only until 'bin/fix-task end'."
+    echo "Write the failing test first, commit it, then fix the code."
+    ;;
+  end)
+    rm -f "$marker"
+    echo "Fix task closed. Test files are writable again."
+    ;;
+  status)
+    if [[ -f "$marker" ]]; then
+      echo "Fix task open ($(cat "$marker")). Test files are read-only."
+    else
+      echo "No fix task open."
+    fi
+    ;;
+  *)
+    echo "usage: bin/fix-task begin|end|status" >&2
+    exit 1
+    ;;
+esac
