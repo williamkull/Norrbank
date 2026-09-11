@@ -26,10 +26,10 @@ public final class CaseStatusProjection {
 
     /** Positions in the column list RegistryEvidenceReadService selects. */
     private static final int ORG_NO = 0;
-    private static final int LEGAL_NAME = 1;
     private static final int EVIDENCE_STATUS = 2;
     private static final int EXPECTED_COMPLETION = 3;
-    private static final int UBO_NAME = 4;
+    // Positions 1 and 4 are legal_name and ubo_name. There are deliberately no constants
+    // for them: nothing here reads a name, on the happy path or on any other one.
 
     private static final String COMPLETE = "REGISTRY_COMPLETE";
 
@@ -85,7 +85,7 @@ public final class CaseStatusProjection {
             }
             return new CaseStatusProjection(orgNo, status, date(row[EXPECTED_COMPLETION]));
         } catch (RuntimeException unreadable) {
-            log.warn("registry evidence row for {} ({}) could not be read", row[LEGAL_NAME], row[UBO_NAME], unreadable);
+            log.warn("registry evidence row {} could not be read", orgNo, unreadable);
             throw new IllegalStateException("registry evidence row could not be read: " + orgNo, unreadable);
         }
     }
