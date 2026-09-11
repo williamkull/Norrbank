@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Panel } from "../shared/Panel";
-import { nextStepLabel, stageLabel } from "../shared/formatting";
+import { formatIsoDate, nextStepLabel, stageLabel } from "../shared/formatting";
 import { fetchCaseStatus, type CaseStatus } from "./api";
 
 interface StatusPanelProps {
@@ -38,7 +38,7 @@ export function StatusPanel({ caseId }: StatusPanelProps) {
         <dt>Next step</dt>
         <dd>{nextStepLabel(status.nextStep)}</dd>
         <dt>Expected date</dt>
-        <dd>{status.expectedDate ?? "Not yet known"}</dd>
+        <dd>{status.expectedDate ? formatIsoDate(status.expectedDate) : "Not yet known"}</dd>
       </dl>
     </Panel>
   );

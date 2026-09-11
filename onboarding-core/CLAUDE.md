@@ -37,3 +37,4 @@ If a test fails, fix the code, not the test.
 - Do not bump dependency versions; the platform team owns them.
 - The legacy `v1/` package is frozen; changes go in `v2/`.
 - Do not add a column to an existing table without a migration in the same commit.
+- Never put beneficial-owner or director names in log or error output.
