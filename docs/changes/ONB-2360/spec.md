@@ -10,7 +10,8 @@ Skills in force: brand@3.2 · ux-workspace@1.1 · aml-compliance@2.0
 An approved `docs/changes/ONB-2360/test-plan.md` says, for each of the 23 cases in
 `docs/changes/ONB-2140/plan.md:253-292`, which test covers it or why none does. One new
 vitest test closes plan case 18: when the status cannot be fetched, the failure shows inside
-the panel and the rest of the case view is still there.
+the panel and the rest of the case view is still there. *Amended 2026-10-13: case 18 is
+closed by two vitest files, a 500 from the status fetch and a rejected fetch; see C4.*
 
 ## What test-plan.md must contain
 
@@ -31,7 +32,7 @@ T5. The four accepted differences between plan and code, each as "plan said / co
     `case_stage` row is `SCREENING_IN_PROGRESS` with a screening date, not null; the registry
     date shows only at `AWAITING_REGISTRY_EVIDENCE`; `REGISTRY_COMPLETE` shows no date.
 T6. What the platform check runs and does not: it runs `bun run lint` (`tsc --noEmit` over `src/`,
-    tests included) and `bun run test` (the 7 files in `src/__tests__/`). It does not run Java
+    tests included) and `bun run test` (the 7 files in `src/__tests__/` at the time of writing; 9 with the two case 18 files). It does not run Java
     (cases 1-13), Playwright (the e2e half of case 18), Selenium, or `bun test platform/`. A green
     check says nothing about cases 1-13.
 T7. The risks carried forward in intent.md: no cache expiry (stale after 02:00); the check does
@@ -76,8 +77,9 @@ The test must not:
 
 ## Constraints
 
-1. No production file changes. The change is `test-plan.md`, `spec.md`, the design document, and
-   one test file under `rm-workspace/src/__tests__/`. Nothing in another issue's folder under
+1. No production file changes. The change is `test-plan.md`, `spec.md`, the design document (`plan.md`; amended 2026-10-13, renamed from `design.md`), and
+   the test files under `rm-workspace/src/__tests__/` (amended 2026-10-13: two, both for case 18, see C4).
+   Nothing in another issue's folder under
    `docs/changes/` is edited.
 2. Existing tests are not edited, weakened, skipped or deleted. Only case 18 is new.
 3. The test is picked up by vitest (`src/**/*.{test,spec}.{ts,tsx}`, happy-dom) and passes under
@@ -125,10 +127,16 @@ part of answer 6B. See constraint 4.
 `.claude/fix-task.marker` exists. It is absent now, so nothing is blocked. If a later step
 runs under `bin/fix-task begin`, the new test file cannot be written. Not a conflict today.
 
-### C4 · Scope: one test, not about four
+### C4 · Scope: one case, two test files, not about four
 
 Answer 2A asked for about four new tests, one per suite; answers 3A, 4B and 9C leave one.
 Intent.md records William Kull approving one test. No test is written for the other suites.
+
+**Amended 2026-10-13, decided by William Kull:** the independent tester in the Test stage wrote
+a second file for the same case 18, `rm-workspace/src/__tests__/CaseView.statusFailed.independent.test.tsx`
+(a rejected fetch; the first file, `CaseView.statusFailed.test.tsx`, has a 500). He decided to keep
+it. This widens "one test" and "one test file" to two files for case 18; still no test for any
+other case.
 
 ## Out of scope
 
