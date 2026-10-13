@@ -43,7 +43,7 @@ All 20 failures on old are tests of the two changed states. All 8 independent te
 The `App.tsx` diff replaces the `cases` and `error` state with one three-way state (loading, failed, loaded). It renders "Loading." or the unavailable sentence in place of the list until the answer is in. The right pane shows "Select a case." only once loaded. I read it for behaviour beyond the table and found none. Two things are worth knowing:
 
 - The catch no longer reads the error message, so the technical text can no longer reach the screen.
-- The "Loading." and unavailable lines reuse the `subdued` and `error` classes. `styles.css` is unchanged, and I did not check that `subdued` is defined there.
+- The "Loading." and unavailable lines reuse the `subdued` and `error` classes. `styles.css` is unchanged. Both classes are defined there: `subdued` at `rm-workspace/src/styles.css:46` and `error` at `:48`.
 
 ## Not intended, or not checked
 
