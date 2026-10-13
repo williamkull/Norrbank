@@ -67,6 +67,8 @@ Question 5 option B, and question 4 option A, would both produce failing tests a
 
 Answer: B. Record it in `docs/changes/ONB-2360/` for a new issue, and leave the test skipped or known-failing. (William Kull, 2026-10-13)
 
+*Superseded in part, 2026-10-13: the "skipped or known-failing" wording is replaced by spec C2. No test is skipped or marked known-failing; a case 18 test that fails is left out of the change and the fault is recorded.*
+
 ## 7. Is the label copy approved, so tests may pin its wording?
 
 `rm-workspace/src/shared/formatting.ts:37-53` is filled in, including "We are verifying the owners". The plan said the copy would ship as placeholders that fail a test. Nothing in the repository records approval by E. Sandberg.
@@ -109,11 +111,11 @@ The one vitest gap left is case 18: a status fetch failure renders inside the pa
 
 The tests pin what the code does today, not what the plan said. The four differences (the DTO `stage` value, the no-row answer, date precedence, and no date at `REGISTRY_COMPLETE`) are recorded in the test plan as accepted. Label tests assert only that each code has a non-fallback label, never the wording, because the copy is not approved.
 
-No production code changes. If a test exposes a fault, the run records it in `docs/changes/ONB-2360/` for a new issue and leaves the test skipped or known-failing. It does not fix the fault here.
+No production code changes. If a test exposes a fault, the run records it in `docs/changes/ONB-2360/` for a new issue and leaves the test skipped or known-failing (superseded by spec C2, 2026-10-13: no test is skipped or marked known-failing). It does not fix the fault here.
 
 ## Conflicts for a person
 
-Left open. This run has not resolved either.
+Decided by William Kull, 2026-10-13, as policy conflicts C1 (the done check is the front-end command; make is not run) and C2 (no test is skipped or known-failing) in `spec.md`. They are no longer open. The recorded answers below are unchanged.
 
 1. **Answer 2A (about 4 new tests, one per suite) against answers 3A and 8A.**
    - 8A says to write tests for the 4 uncovered and 3 partly covered cases. 3A ("Vitest only, no production code changes") excludes the Java cases among them (5, 6, 7, 8). 4B drops 20 and 21, and 9C leaves 5 and 6 uncovered.
