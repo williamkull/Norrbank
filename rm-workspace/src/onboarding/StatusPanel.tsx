@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Panel } from "../shared/Panel";
 import { formatIsoDate, nextStepLabel, stageLabel } from "../shared/formatting";
 import { fetchCaseStatus, type CaseStatus } from "./api";
@@ -9,12 +9,15 @@ interface StatusPanelProps {
 
 /** Where the case stands: stage with its procedure code, what it waits on, when it lands. */
 export function StatusPanel({ caseId }: StatusPanelProps) {
-  const { status, failed } = useCaseStatus(caseId);
+  const { status, failed, retry } = useCaseStatus(caseId);
 
   if (failed) {
     return (
       <Panel title="Status">
         <p className="error">Status is unavailable right now.</p>
+        <button type="button" onClick={retry}>
+          Try again
+        </button>
       </Panel>
     );
   }
@@ -56,45 +59,69 @@ export function StatusPanel({ caseId }: StatusPanelProps) {
  *
  * Nothing expires either on a timer: no interval, no refetch on focus or visibility. Both
  * live in memory and die with the page, which is correct — the workspace holds nothing
- * across a session that the gateway did not put there.
+ * across a session that the gateway did not put there. A press on "Try again" is the only
+ * thing that asks again after a failure.
  */
-function useCaseStatus(caseId: string): { status: CaseStatus | null; failed: boolean } {
-  const [status, setStatus] = useState<CaseStatus | null>(held.get(caseId) ?? null);
-  const [failed, setFailed] = useState(false);
+function useCaseStatus(caseId: string): {
+  status: CaseStatus | null;
+  failed: boolean;
+  retry: () => void;
+} {
+  const [entry, setEntry] = useState<Loaded | null>(null);
+
+  // State is tagged with the case it belongs to and read only for that case, so another
+  // case's status, failure or attempt is never shown, not even for one frame.
+  const mine = entry?.caseId === caseId ? entry : null;
+  const status = held.get(caseId) ?? mine?.status ?? null;
+  const failed = status === null && (mine?.failed ?? false);
+  const attempt = mine?.attempt ?? 0;
+
+  const retry = useCallback(() => {
+    setEntry((prev) =>
+      prev && prev.caseId === caseId && prev.failed
+        ? { caseId, status: null, failed: false, attempt: prev.attempt + 1 }
+        : prev,
+    );
+  }, [caseId]);
 
   useEffect(() => {
-    setFailed(false);
-    const already = held.get(caseId);
-    if (already) {
-      setStatus(already);
-      return;
-    }
-    setStatus(null);
+    if (held.has(caseId)) return;
     let showing = true;
     let pending = inFlight.get(caseId);
     if (!pending) {
-      pending = fetchCaseStatus(caseId);
-      inFlight.set(caseId, pending);
-      pending
-        .then((loaded) => held.set(caseId, loaded))
-        // Neither a failure nor its request is kept, so the next selection tries again.
-        .catch(() => undefined)
+      // The bookkeeping sits on the stored promise, so it has run before any panel hears the
+      // outcome: a retry never joins the request that just failed. A failure is not kept.
+      // The stored promise rejects; every consumer below attaches its own handler.
+      pending = fetchCaseStatus(caseId)
+        .then((loaded) => {
+          held.set(caseId, loaded);
+          return loaded;
+        })
         .finally(() => inFlight.delete(caseId));
+      inFlight.set(caseId, pending);
     }
-    pending
-      .then((loaded) => {
-        if (showing) setStatus(loaded);
-      })
-      .catch(() => {
+    pending.then(
+      (loaded) => {
+        if (showing) setEntry({ caseId, status: loaded, failed: false, attempt });
+      },
+      () => {
         // Panel-local: a status the service cannot answer must not take the case view with it.
-        if (showing) setFailed(true);
-      });
+        if (showing) setEntry({ caseId, status: null, failed: true, attempt });
+      },
+    );
     return () => {
       showing = false;
     };
-  }, [caseId]);
+  }, [caseId, attempt]);
 
-  return { status, failed };
+  return { status, failed, retry };
+}
+
+interface Loaded {
+  caseId: string;
+  status: CaseStatus | null;
+  failed: boolean;
+  attempt: number;
 }
 
 const held = new Map<string, CaseStatus>();
