@@ -49,21 +49,30 @@ its two tests stay as they are, and the one place that knows about loading is `A
    - `loading`: `<p className="subdued">Loading.</p>`
    - `failed`: `<p className="error">Cases are unavailable right now.</p>`
    - `loaded`: `<CaseList cases={load.cases} … />` as today.
-5. Right pane (line 42): see Decision 2. Until decided, the line stays as it is.
+5. Right pane: shows `Select a case.` only when the state is `loaded`, and nothing while
+   loading or after a failure (Decision B, taken at the design approval).
+6. The effect ignores the answer of a run that is no longer current: `let current = true;`,
+   the success and failure setters (including `setSelectedCaseId`) guarded with
+   `if (current)`, and a cleanup that sets `current = false`.
 
-### 2. `rm-workspace/src/__tests__/App.caseList.test.tsx`
+### 2. The tests
 
-Add tests (below). The three existing tests are kept word for word: they are correct and
-should now pass.
+- `rm-workspace/src/__tests__/App.caseList.test.tsx`: tests added (below). The three
+  existing tests are kept word for word: they are correct and now pass. Tests under
+  `React.StrictMode` cover the stale effect.
+- `rm-workspace/src/__tests__/App.pinned.test.tsx`: pinning tests, written before the fix.
+- `rm-workspace/src/__tests__/App.caseList.independent.test.tsx`: independent tests.
 
+The files that change are `rm-workspace/src/App.tsx` and these three test files. The
+documents in this folder are `intent.md`, `plan.md`, `code-map.md` and `comparison.md`.
 No other file changes.
 
 ## What each state shows
 
 | State | The list shows | Class | Right pane |
 |---|---|---|---|
-| loading | "Loading." | `.subdued` | "Select a case." (Decision 2) |
-| failed | "Cases are unavailable right now." | `.error` | "Select a case." (Decision 2) |
+| loading | "Loading." | `.subdued` | nothing |
+| failed | "Cases are unavailable right now." | `.error` | nothing |
 | loaded, empty | "No open onboarding cases." (from `CaseList`) | `.empty` | "Select a case." (as today) |
 | loaded, cases | the table; first case selected | — | `CaseView` of the first case |
 
@@ -111,32 +120,32 @@ Notes for the writer of the tests:
   answers stays on "Loading." (out of scope).
 - onboarding-core, the cases endpoint, `deploy/`, the e2e suites. Neither e2e suite asserts on
   the sentence (`code-map.md` §3.5).
-- The StrictMode double request in dev. Both answers are the same.
+- The StrictMode double request in dev is still made. The effect ignores the answer of a run
+  that is no longer current, so only the answer of the current run decides what is shown.
 
-## Decision for the architect: full stops
+## Decision A (taken): full stops
+
+Decided by the architect at the design approval: **A**. The wording follows the issue word for
+word, with full stops.
 
 Brand v3.2 §3 says no full stop on a single-line label or value. The issue's three sentences,
 and the Status panel's "Loading." and "Status is unavailable right now.", all end with one.
 
-- A. Follow the issue word for word. The list then matches the panel beside it.
+- A. Follow the issue word for word. The list then matches the panel beside it. **Chosen.**
 - B. Drop the full stops to follow §3. The list then differs from the panel, or the panel
-  must change, which is out of scope.
+  must change, which is out of scope. Not chosen.
 
-Recommendation: A. The wording is fixed in the issue and the panel already sets the pattern.
-I found no reason in the code to depart from it. If the brand owner rules for B, it is three
-strings in `App.tsx` and one in `CaseList.tsx`.
+## Decision B (taken): the right pane while loading and after a failure
 
-## Decision for the architect: the right pane while loading and after a failure
+Decided by the architect at the design approval: **B**. The right pane shows "Select a case."
+only once the cases have loaded, and nothing before the answer or after a failure.
 
-Today it shows "Select a case." The issue is silent.
+Before the change it showed "Select a case." in every state. The issue is silent.
 
 - A. Leave it. No code. But it asks the RM to select from a list that has nothing to select,
-  both while loading and after a failure.
-- B. Smallest change that tells no untruth: show "Select a case." only when the state is
-  `loaded`; render nothing in the pane while loading or failed. One condition on line 42, no
-  new sentence, no new class. The pane is empty for a moment, which is not a layout shift
-  (the pane has no content to move).
+  both while loading and after a failure. Not chosen.
+- B. Show "Select a case." only when the state is `loaded`; render nothing in the pane while
+  loading or failed. One condition, no new sentence, no new class. The pane is empty for a
+  moment, which is not a layout shift (the pane has no content to move). **Chosen.**
 
-Recommendation: B. It adds no wording and removes the one instruction that cannot be followed.
-It also needs one test: no "Select a case." while loading or after a failure. If the answer is
-A, nothing is added.
+A test covers it: no "Select a case." while loading or after a failure.
