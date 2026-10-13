@@ -12,7 +12,7 @@ Run three passes and tag each finding with its pass:
   at night.
 - **Security** — injection risks, authentication gaps, missing authorisation on a read
   path, secrets in the diff, and personal data reaching a log or an error message.
-- **Compliance** — the change matches `spec.md` and `plan.md`, and it honours the skills
+- **Compliance** — the change matches the issue's `spec.md` and `plan.md` in `docs/changes/<ISSUE-KEY>/`, and it honours the skills
   those cite. Read both files. A change that does something better than the plan said still
   gets a finding, because the plan is what was accepted.
 

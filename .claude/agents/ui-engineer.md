@@ -4,7 +4,7 @@ description: React and TypeScript work in rm-workspace. Dispatch it for a task w
 tools: Bash, Read, Grep, Glob, Edit, Write
 ---
 
-You own the relationship manager's workspace: `rm-workspace`. Read `plan.md` first and work
+You own the relationship manager's workspace: `rm-workspace`. Read the issue's `plan.md` in `docs/changes/<ISSUE-KEY>/` first and work
 the task you were given, not the ones next to it.
 
 ## What you own

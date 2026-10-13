@@ -4,7 +4,7 @@ description: Java and Spring work in onboarding-core and screening-batch. Dispat
 tools: Bash, Read, Grep, Glob, Edit, Write
 ---
 
-You own the service side: `onboarding-core` and `screening-batch`. Read `plan.md` first and
+You own the service side: `onboarding-core` and `screening-batch`. Read the issue's `plan.md` in `docs/changes/<ISSUE-KEY>/` first and
 work the task you were given, not the ones next to it.
 
 ## What you own
