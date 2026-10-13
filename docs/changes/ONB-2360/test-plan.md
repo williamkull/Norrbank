@@ -1,6 +1,6 @@
 # Test plan: the ONB-2140 status panel
 
-Jira: ONB-2360. Status: approved by William Kull (Onboarding platform) on 2026-10-13, before any test was written. The case 18 test has since been written. This revision (2026-10-13) corrects stale statements and awaits his re-approval.
+Jira: ONB-2360. Status: approved by William Kull (Onboarding platform) on 2026-10-13, before any test was written, and re-approved by him on 2026-10-13 after commit b549b4e. This further revision (2026-10-13) corrects tense and the design file name (now `plan.md`) and goes back to him.
 Written 2026-10-13 from `docs/changes/ONB-2140/plan.md:253-292`, corrected by `code-map.md` and `spec.md` in this folder.
 
 The built code is the contract. This plan pins what the code does, not what the ONB-2140 plan said. The differences are in section 3.
@@ -73,7 +73,7 @@ Runs:
 
 - `cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test`.
 - `bun run lint` is `tsc --noEmit` over `src/`, tests included.
-- `bun run test` is vitest over every file it discovers under `rm-workspace/src/`, 9 at this revision. This covers cases 14-19, 22 and 23, and the case 18 test once it is written.
+- `bun run test` is vitest over every file it discovers under `rm-workspace/src/`, 9 at this revision. This covers cases 14-19, 22 and 23, including the two case 18 test files, which are written and pass.
 
 Does not run:
 
@@ -99,4 +99,4 @@ A green check says nothing about cases 1-13.
 - No Java, Playwright or Selenium test is written.
 - Nothing in another issue's folder under `docs/changes/`.
 
-If the case 18 test fails against the built code, it is left out of the change and the fault is recorded in `docs/changes/ONB-2360/` for a new issue. No test is skipped or marked known-failing.
+The two case 18 tests are written and pass against the built code. Had one failed, it would have been left out of the change and the fault recorded in `docs/changes/ONB-2360/` for a new issue. No test is skipped or marked known-failing.
