@@ -5,7 +5,8 @@ From intent/retry-a-failed-status.md (ONB-2381). Author and product owner: Willi
 Jira: ONB-2381
 Skills in force: brand@3.2 · secure-api-review@1.4 · aml-compliance@2.0 · ux-workspace@1.1
 Carries forward from the ONB-2140 spec (git history): the stage and procedure code
-requirement, and the personal-data rule. Both are unchanged and listed under Constraints.
+requirement, the personal-data rule, the existing-SSO rule and the v2 status endpoint behind
+the gateway JWT. All are unchanged and listed under Constraints.
 
 ## Outcome
 
@@ -74,6 +75,9 @@ Carried from ONB-2140, unchanged:
    §4). The retry reads the same status as today and adds nothing to it. The expected date
    stays date-only.
 9. The workspace session holds nothing beyond what the gateway forwards.
+10. Existing SSO only. No new identity, no new role.
+11. The panel reads a v2 status endpoint behind the existing SSO gateway JWT. It adds nothing
+    to the workspace session.
 
 Checked and not in conflict: brand §1 and §5 (the button is the "what to do next" for the
 failed state; no apology, no exclamation); ux-workspace §5 (the failed panel stays inside the

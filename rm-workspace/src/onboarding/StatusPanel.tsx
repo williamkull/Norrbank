@@ -111,7 +111,12 @@ function useCaseStatus(caseId: string): {
     );
     return () => {
       showing = false;
+      // Leaving a case drops its failed entry: the one slot would otherwise show a stale
+      // failure, with a button, on returning while the effect has already asked again. A press
+      // has cleared `failed` before this runs, so a retry is not undone.
+      setEntry((prev) => (prev && prev.caseId === caseId && prev.failed ? null : prev));
     };
+    // `attempt` is captured in this closure and must stay in the dependency array.
   }, [caseId, attempt]);
 
   return { status, failed, retry };

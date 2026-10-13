@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { flushSync } from "react-dom";
 import { StatusPanel } from "../onboarding/StatusPanel";
 import { nextStepLabel, stageLabel } from "../shared/formatting";
 import type { CaseStatus } from "../onboarding/api";
@@ -50,7 +51,10 @@ function respondWith(status: CaseStatus | null): ReturnType<typeof vi.fn> {
 }
 
 function ok(status: CaseStatus): Response {
-  return new Response(JSON.stringify(status), { status: 200, headers: { "content-type": "application/json" } });
+  return new Response(JSON.stringify(status), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
 }
 
 function failed(): Response {
@@ -196,8 +200,11 @@ describe("StatusPanel", () => {
 
     render(<StatusPanel caseId={id} />);
     const button = await screen.findByRole("button", { name: "Try again" });
-    fireEvent.click(button);
-    fireEvent.click(button);
+    // Both clicks reach React before it re-renders, so the second one still finds the button.
+    flushSync(() => {
+      fireEvent.click(button);
+      fireEvent.click(button);
+    });
     await settle();
 
     expect(fetcher).toHaveBeenCalledTimes(2);
@@ -270,7 +277,8 @@ describe("StatusPanel", () => {
     render(<StatusPanel caseId={id} />);
     await screen.findByText("We are verifying the owners");
 
-    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
+    await settle();
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("does not hold a failed status: mounting the case again asks again", async () => {
@@ -338,6 +346,36 @@ describe("StatusPanel", () => {
     forB.resolve(statusFor(b, { procedureStageCode: "EDD-B" }));
     expect(await screen.findByText("EDD-B")).toBeDefined();
     expect(screen.queryByText("EDD-A")).toBeNull();
+  });
+
+  it("shows Loading. and no button on returning to a failed case while its new request is in the air", async () => {
+    const [a, b] = ["ONB-2026-000823", "ONB-2026-000824"];
+    const forB = deferredResponse();
+    const againForA = deferredResponse();
+    const fetcher = routeByCase({
+      [a]: (call) => (call === 1 ? failed() : againForA.response),
+      [b]: () => forB.response,
+    });
+
+    const view = render(<StatusPanel caseId={a} />);
+    await screen.findByText(UNAVAILABLE);
+    view.rerender(<StatusPanel caseId={b} />);
+    view.rerender(<StatusPanel caseId={a} />);
+
+    expect(screen.getByText("Loading.")).toBeDefined();
+    expect(screen.queryByText(UNAVAILABLE)).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(requestedUrls(fetcher)).toEqual([
+      `/v2/cases/${a}/status`,
+      `/v2/cases/${b}/status`,
+      `/v2/cases/${a}/status`,
+    ]);
+
+    againForA.resolve(statusFor(a, { procedureStageCode: "EDD-A" }));
+    expect(await screen.findByText("EDD-A")).toBeDefined();
+    forB.resolve(statusFor(b));
+    await settle();
+    expect(requestedUrls(fetcher)).toHaveLength(3);
   });
 
   it("renders the button as a native button of type button named Try again", async () => {

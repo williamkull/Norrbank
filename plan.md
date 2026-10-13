@@ -165,6 +165,12 @@ Check 9 in the browser (Tab, Enter, Space) is native behaviour that happy-dom do
 simulate. The test pins the element and its name; the keyboard itself is checked by hand, see
 Verification.
 
+### 3. `rm-workspace/src/__tests__/StatusPanel.retry.independent.test.tsx` (added later)
+
+Not in the plan as first written, which named two files. The independent test step added it,
+beyond those two. It is kept as a check written apart from the author's, and is not edited
+by the author.
+
 Nothing else changes: no `api.ts`, no `CaseView.tsx`, no CSS, no `shared/`, no
 onboarding-core, no e2e.
 
@@ -187,7 +193,10 @@ onboarding-core, no e2e.
 - **Single state slot.** `entry` holds one case at a time. Switching away and back to a
   failed case shows "Loading." and makes a new request. That is how it works today and what
   the spec's "Per case" lines allow. It is not a regression, but a reviewer may expect the
-  failure to be remembered.
+  failure to be remembered. The effect cleanup clears a failed entry for the case being left
+  (a press has already cleared `failed`, so a retry is not undone). Without that, returning
+  to A before B answered showed A's old failure and button while the effect had already
+  asked again, against checks 5 and 10. There is a test for it.
 - **Rate limit (C1).** More calls to the status endpoint are possible. The load is bounded:
   one request per press, one press at a time. The platform team's confirmation has been
   requested and not received. It is a release dependency, not a code dependency. Do not ship
