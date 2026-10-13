@@ -1,6 +1,6 @@
 # Intent: retry a status that failed to load
 
-Author: Claude, for the reporter of ONB-2381 (RM workspace)
+Author: William Kull, product owner
 Status: draft
 Jira: ONB-2381
 
@@ -22,8 +22,9 @@ Relationship managers using the case view. rm-workspace only: the Status panel a
 - One new request per press, for the open case. Nothing automatic: no retry, timers or refetch on focus.
 - A status that has loaded is still fetched only once per case.
 - The existing message text stays as it is.
+- The "Try again" button uses the browser's default look. No button style is added.
 - No change to the rest of the case view, and no new data, authentication or audit behaviour.
 
 ## Open questions
 
-1. For the product owner: the workspace has no button styles (`rm-workspace/src/styles.css` has only `.error` and `.subdued`), and adding some goes beyond the two files the issue names. Proposed answer: use a plain button with the browser's default look. Overrule this if the button should match a style we do not have yet.
+None.
