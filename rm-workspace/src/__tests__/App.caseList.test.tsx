@@ -1,3 +1,4 @@
+import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import { App } from "../App";
@@ -164,5 +165,163 @@ describe("App case list states", () => {
     expect(row?.className).toBe("selected");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Juniper Bulk AB");
     expect(screen.queryByText(SELECT_A_CASE)).toBeNull();
+  });
+});
+
+interface Deferred {
+  resolve: (response: Response) => void;
+}
+
+/**
+ * Stubs fetch so each /v2/cases call waits for the test to answer it, in call order.
+ * /v2/cases/{id}/status is answered at once, as stubService does.
+ */
+function stubDeferredCases(): Deferred[] {
+  const calls: Deferred[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL) => {
+      const path = String(input);
+      if (path === "/v2/cases") {
+        return new Promise<Response>((resolve) => {
+          calls.push({ resolve });
+        });
+      }
+      const status = /^\/v2\/cases\/([^/]+)\/status$/.exec(path);
+      if (status) {
+        return Promise.resolve(
+          json({
+            caseId: status[1],
+            stage: "AWAITING_REGISTRY_EVIDENCE",
+            procedureStageCode: "EDD-PENDING",
+            nextStep: "AWAITING_REGISTRY_EVIDENCE",
+            expectedDate: "2026-09-24",
+            expectedDateSource: "registry-evidence",
+          }),
+        );
+      }
+      return Promise.resolve(new Response("", { status: 404 }));
+    }),
+  );
+  return calls;
+}
+
+function oneCase(caseId: string, legalName: string): unknown[] {
+  return [
+    {
+      caseId,
+      orgNo: "5560001234",
+      legalName,
+      lifecycleStatus: "OPEN",
+      openedAt: "2026-09-01T08:00:00Z",
+      updatedAt: "2026-09-10T08:00:00Z",
+      documentsOutstanding: 1,
+    },
+  ];
+}
+
+async function answer(call: Deferred | undefined, response: Response): Promise<void> {
+  await act(async () => {
+    call?.resolve(response);
+    await new Promise((done) => setTimeout(done, 0));
+  });
+}
+
+describe("App case list under React.StrictMode", () => {
+  it("asks for the cases twice, so these tests exercise a stale effect", async () => {
+    const calls = stubDeferredCases();
+
+    render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+    await settle();
+
+    expect(calls.length).toBe(2);
+  });
+
+  it.each([
+    ["the stale 200 answers after the current 503", "current-first"],
+    ["the stale 200 answers before the current 503", "stale-first"],
+  ])("stays unavailable when %s", async (_name, order) => {
+    const calls = stubDeferredCases();
+
+    const { container } = render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+    await settle();
+    const [stale, current] = calls;
+
+    const staleAnswer = (): Promise<void> =>
+      answer(stale, json(oneCase("ONB-2026-000951", "Stale Answer AB")));
+    const currentAnswer = (): Promise<void> => answer(current, new Response("", { status: 503 }));
+
+    if (order === "current-first") {
+      await currentAnswer();
+      await staleAnswer();
+    } else {
+      await staleAnswer();
+      await currentAnswer();
+    }
+
+    expect(screen.getByText(UNAVAILABLE)).toBeDefined();
+    expect(container.querySelector("table")).toBeNull();
+    expect(screen.queryByText("Stale Answer AB")).toBeNull();
+    expect(screen.queryByText("Loading.")).toBeNull();
+    expect(screen.queryByText(SELECT_A_CASE)).toBeNull();
+  });
+
+  it.each([
+    ["the stale 503 answers after the current 200", "current-first"],
+    ["the stale 503 answers before the current 200", "stale-first"],
+  ])("keeps the loaded cases when %s", async (_name, order) => {
+    const calls = stubDeferredCases();
+
+    const { container } = render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+    await settle();
+    const [stale, current] = calls;
+
+    const staleAnswer = (): Promise<void> => answer(stale, new Response("", { status: 503 }));
+    const currentAnswer = (): Promise<void> =>
+      answer(current, json(oneCase("ONB-2026-000952", "Current Answer AB")));
+
+    if (order === "current-first") {
+      await currentAnswer();
+      await staleAnswer();
+    } else {
+      await staleAnswer();
+      await currentAnswer();
+    }
+
+    expect(screen.queryByText(UNAVAILABLE)).toBeNull();
+    expect(container.querySelector("tbody tr")?.className).toBe("selected");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Current Answer AB");
+    expect(screen.queryByText("Loading.")).toBeNull();
+  });
+
+  it("does not open a case from a stale answer when the current answer is a different list", async () => {
+    const calls = stubDeferredCases();
+
+    const { container } = render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+    await settle();
+    const [stale, current] = calls;
+
+    await answer(current, json(oneCase("ONB-2026-000953", "Current List AB")));
+    await answer(stale, json(oneCase("ONB-2026-000954", "Stale List AB")));
+
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Current List AB");
+    expect(screen.queryByText("Stale List AB")).toBeNull();
+    expect(container.querySelectorAll("tbody tr").length).toBe(1);
   });
 });

@@ -15,12 +15,22 @@ export function App() {
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
   useEffect(() => {
+    let current = true;
     fetchCases()
       .then((loaded) => {
-        setLoad({ state: "loaded", cases: loaded });
-        setSelectedCaseId((current) => current ?? loaded[0]?.caseId ?? null);
+        if (current) {
+          setLoad({ state: "loaded", cases: loaded });
+          setSelectedCaseId((selected) => selected ?? loaded[0]?.caseId ?? null);
+        }
       })
-      .catch(() => setLoad({ state: "failed" }));
+      .catch(() => {
+        if (current) {
+          setLoad({ state: "failed" });
+        }
+      });
+    return () => {
+      current = false;
+    };
   }, []);
 
   const selected =
