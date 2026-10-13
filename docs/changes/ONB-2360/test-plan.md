@@ -1,6 +1,6 @@
 # Test plan: the ONB-2140 status panel
 
-Jira: ONB-2360. Status: draft, for approval by William Kull (Onboarding platform) before any test is written.
+Jira: ONB-2360. Status: approved by William Kull (Onboarding platform) on 2026-10-13, before any test was written. The case 18 test has since been written. This revision (2026-10-13) corrects stale statements and awaits his re-approval.
 Written 2026-10-13 from `docs/changes/ONB-2140/plan.md:253-292`, corrected by `code-map.md` and `spec.md` in this folder.
 
 The built code is the contract. This plan pins what the code does, not what the ONB-2140 plan said. The differences are in section 3.
@@ -20,7 +20,7 @@ Every one of the 23 cases in `plan.md:253-292` has one status:
 | Left out | 5, 6, 7, 8, 20, 21 | 6 |
 | **Total** | | **23** |
 
-Every citation was checked against the test file on 2026-10-13: the file exists and a test of that name is in it. The Java tests were **read, not run**: there is no JDK 21 in this worktree. The vitest tests were also not run here (`rm-workspace/node_modules` does not exist until `bun install` is run); the new case 18 test is the only one that must pass under the done check in section 4.
+Every citation was checked against the test file on 2026-10-13: the file exists and a test of that name is in it. The Java tests were **read, not run**: there is no JDK 21 in this worktree. The front-end check was run: `cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test` passed, with `tsc` clean and, with both new files, 9 test files and 106 tests. `make build`, `make test`, `make lint`, the Java suites and Playwright were not run, because the worktree has no JDK.
 
 ## 2. The 23 cases
 
@@ -45,7 +45,7 @@ Layer is Java unit, Java integration, vitest or Playwright. Line numbers are the
 | 15 | An unknown code gives safe wording (281) | vitest | Cited | `StatusPanel.test.tsx:422`, "gives safe wording for a code it does not know" |
 | 16 | Plain wording with the procedure code beside it (282) | vitest | Cited | `StatusPanel.test.tsx:124`, "shows plain wording with the procedure code beside it". The text is asserted. "Beneath" is CSS (`styles.css:50`) and is not. Also Playwright `rm-workspace/e2e/status-panel.spec.ts:59`. |
 | 17 | No date shown when none is known (283) | vitest | Cited | `StatusPanel.test.tsx:142`, "says the date is not yet known rather than showing nothing". Also Playwright `status-panel.spec.ts:68`. |
-| 18 | A fetch failure renders inside the panel and leaves the case view intact (284) | vitest (the e2e half is Playwright) | **Written here** | New test in `rm-workspace/src/__tests__/`, rendering `CaseView` with a failing status. Behaviour B1-B4 in `spec.md`, "The case 18 test". `StatusPanel.test.tsx:150`, "keeps a failed status inside the panel", covers the panel half only; Playwright `status-panel.spec.ts:92` covers the heading only. |
+| 18 | A fetch failure renders inside the panel and leaves the case view intact (284) | vitest (the e2e half is Playwright) | **Written here** | Two tests render `CaseView` with a failing status: `rm-workspace/src/__tests__/CaseView.statusFailed.test.tsx` ("CaseView" › "keeps the rest of the case view when the status fails to load"), a 500 from the status fetch; and `rm-workspace/src/__tests__/CaseView.statusFailed.independent.test.tsx` ("CaseView, status request rejected (independent)" › "shows the failure only in the Status panel and keeps the rest"), a rejected fetch, kept by William Kull's decision of 2026-10-13. Behaviour B1-B4 in `spec.md`, "The case 18 test". `StatusPanel.test.tsx:150`, "keeps a failed status inside the panel", covers the panel half only; Playwright `status-panel.spec.ts:92` covers the heading only. |
 | 19 | A second selection does not call the fetcher (287) | vitest | Cited, as built | `StatusPanel.test.tsx:158`, "does not fetch a case it has already loaded". There is no ceiling to stay within. Also `StatusPanel.retry.independent.test.tsx` and Playwright `status-panel.spec.ts:76`. |
 | 20 | An entry fetched at 01:50 is not served at 02:06 (288) | vitest | Left out | The panel cache has no expiry (`rm-workspace/src/onboarding/StatusPanel.tsx:132`), so the case cannot pass. |
 | 21 | An entry fetched at 09:00 is not served at 09:31 (290) | vitest | Left out | Same reason as case 20. There is no ceiling either. |
@@ -73,7 +73,7 @@ Runs:
 
 - `cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test`.
 - `bun run lint` is `tsc --noEmit` over `src/`, tests included.
-- `bun run test` is vitest over the 7 files in `rm-workspace/src/__tests__/`. This covers cases 14-19, 22 and 23, and the case 18 test once it is written.
+- `bun run test` is vitest over every file it discovers under `rm-workspace/src/`, 9 at this revision. This covers cases 14-19, 22 and 23, and the case 18 test once it is written.
 
 Does not run:
 
