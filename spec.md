@@ -125,7 +125,11 @@ decision of the run owner and is not treated as a conflict with ux-workspace §6
 - **Recommendation:** option 2.
 - **Decides:** William Kull (product owner) with the platform team and the onboarding-core
   owner.
-- **Status:** open.
+- **Status:** answered.
+- **Decision:** option 2, as recommended. The rate limit is not changed. The platform team is
+  asked to confirm that the current gateway limit covers a user-paced, one-request-per-press
+  retry. That confirmation has been requested and is not yet received. Decided by William
+  Kull, 2026-10-13.
 
 ### C2 · Contradicting standards — panel layout when the state changes
 
@@ -143,7 +147,10 @@ decision of the run owner and is not treated as a conflict with ux-workspace §6
 - **Recommendation:** option 1, and record that the existing Loading to Shown shift is the
   same defect, to be fixed once for the panel.
 - **Decides:** William Kull (product owner) with Workspace design.
-- **Status:** open.
+- **Status:** answered.
+- **Decision:** option 1, as recommended. The shift is accepted for this change. Fixing layout
+  shift is to be done once for the whole panel, outside ONB-2381. Decided by William Kull,
+  2026-10-13.
 
 ## Out of scope
 
