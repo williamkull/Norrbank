@@ -82,9 +82,13 @@ The test must not:
 2. Existing tests are not edited, weakened, skipped or deleted. Only case 18 is new.
 3. The test is picked up by vitest (`src/**/*.{test,spec}.{ts,tsx}`, happy-dom) and passes under
    `cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test`.
-   No `any`; `toBeDefined()`, not `jest-dom`.
+   No `any`; `toBeDefined()`, not `jest-dom`. This command is the done check (William Kull,
+   2026-10-13). Every report says plainly that `make build`, `make test` and `make lint` were
+   not run, and why: there is no JDK 21 here.
 4. The built code is the contract. A fault the test exposes is recorded in
-   `docs/changes/ONB-2360/` for a new issue and is not fixed here.
+   `docs/changes/ONB-2360/` for a new issue and is not fixed here. No test is skipped or marked
+   known-failing: if the case 18 test fails against the built code, it is left out of the
+   change (William Kull, 2026-10-13).
 5. `test-plan.md` is approved by William Kull before any test is written.
 
 ## Areas of concern
@@ -97,9 +101,11 @@ reported complete, with the output pasted. `Makefile:16-19` makes all three depe
 worktree, so none of the three can pass here, and `make lint` runs only `tsc --noEmit`.
 The intent's own done check is the front-end command in constraint 3.
 
-**Open.** Options: run the three `make` targets on a machine with a JDK 21 and paste that
-output; report the front-end command as the check and say plainly that `make` was not run; or
-change `CLAUDE.md` to name the front-end command for tests-only changes.
+**Decided** by William Kull, 2026-10-13: "report the front-end command as the check and say
+plainly that make was not run." The done check is
+`cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test`. Every
+report states plainly that `make build`, `make test` and `make lint` were not run, and why
+(no JDK 21 here, so `check-java` exits 1). See constraint 3.
 
 ### C2 · Contradicting policies — "never skip a failing test" against "leave the test skipped"
 
@@ -107,9 +113,11 @@ change `CLAUDE.md` to name the front-end command for tests-only changes.
 test that exposes a fault stays "skipped or known-failing" while the fault is recorded.
 Case 18 is expected to pass against the built code, so this arises only if it does not.
 
-**Open.** Options: no test is skipped, and a failing case 18 is recorded and left out of the
-change; skip it with a reference to the new issue, with William Kull waiving `CLAUDE.md:20`
-for that test; or hold the run until the fault is fixed.
+**Decided** by William Kull, 2026-10-13: "no test is skipped; if case 18 fails, record it and
+leave it out of the change." No test is skipped or marked known-failing. If the case 18 test
+fails against the built code, the fault is recorded in `docs/changes/ONB-2360/` for a new
+issue and the test is left out of the change. This supersedes the "skipped or known-failing"
+part of answer 6B. See constraint 4.
 
 ### C3 · Test lock
 
