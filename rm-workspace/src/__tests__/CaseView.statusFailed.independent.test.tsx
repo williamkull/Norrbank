@@ -29,7 +29,7 @@ describe("CaseView, status request rejected (independent)", () => {
     const { container } = render(<CaseView onboardingCase={summary} />);
     await screen.findByRole("button", { name: "Try again" });
     await act(async () => {
-      await new Promise((done) => setTimeout(done, 20));
+      await new Promise((done) => setTimeout(done, 0));
     });
 
     const panels = Array.from(container.querySelectorAll("section")).map(

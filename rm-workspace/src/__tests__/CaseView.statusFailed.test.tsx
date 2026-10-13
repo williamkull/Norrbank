@@ -25,6 +25,13 @@ async function settle(): Promise<void> {
   });
 }
 
+/** The section around an element. A missing section fails the test here, not by an early return. */
+function sectionOf(element: Element | null, name: string): HTMLElement {
+  const section = element?.closest("section");
+  if (!section) throw new Error(`No ${name} panel found`);
+  return section;
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -47,9 +54,7 @@ describe("CaseView", () => {
 
     // B1: the failure is inside the Status panel
     expect(button.getAttribute("type")).toBe("button");
-    const statusPanel = button.closest("section");
-    expect(statusPanel).not.toBeNull();
-    if (!statusPanel) return;
+    const statusPanel = sectionOf(button, "Status");
     expect(within(statusPanel).getByRole("heading", { level: 2 }).textContent).toBe("Status");
     expect(within(statusPanel).getByText(UNAVAILABLE)).toBeDefined();
 
@@ -63,9 +68,7 @@ describe("CaseView", () => {
     // B3: the rest of the case view stays
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Tallbacken Marin AB");
     expect(screen.getByText("ONB-2026-000830 · 556999-0123")).toBeDefined();
-    const casePanel = screen.getByRole("heading", { level: 2, name: "Case" }).closest("section");
-    expect(casePanel).not.toBeNull();
-    if (!casePanel) return;
+    const casePanel = sectionOf(screen.getByRole("heading", { level: 2, name: "Case" }), "Case");
     expect(within(casePanel).getByText(lifecycleLabel(summary.lifecycleStatus))).toBeDefined();
     expect(within(casePanel).getByText("2026-09-01")).toBeDefined();
     expect(within(casePanel).getByText("2026-09-10")).toBeDefined();
