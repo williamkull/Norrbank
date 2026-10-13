@@ -11,12 +11,12 @@ The platform check runs only the front-end tests. A pass says nothing about the 
 
 ## Proposed outcome
 
-An approved `test-plan.md` that says, for each of the 23 cases, which test covers it or why none does. Then the one front-end gap that can be closed here is closed: when the status cannot be fetched, the failure shows inside the panel and the rest of the case view is still there (plan case 18).
+An approved `test-plan.md` that says, for each of the 23 cases, which test covers it or why none does. Then the one front-end gap that can be closed here is closed (by two test files, see the amendment under "In scope"): when the status cannot be fetched, the failure shows inside the panel and the rest of the case view is still there (plan case 18).
 
 **In scope**
 
 - `docs/changes/ONB-2360/test-plan.md`, written from plan.md:253-292 and corrected by `code-map.md`. William Kull approves it before any test is written.
-- One new test, plan case 18, rendering the case view with a failing status.
+- One new test, plan case 18, rendering the case view with a failing status. **Amended 2026-10-13:** case 18 has two test files, not one: the first (a 500 from the status fetch) and `CaseView.statusFailed.independent.test.tsx` (a rejected fetch), written by the independent tester in the Test stage. William Kull decided to keep it. Still one case, no other case gets a new test.
 - Cases 14-17, 19, 22 and 23 cited to their existing tests, not rewritten.
 - The four differences between plan and code recorded as accepted: the `stage` value, the answer for a case with no stage row, date precedence, and no date at `REGISTRY_COMPLETE`.
 
@@ -55,4 +55,4 @@ An approved `test-plan.md` that says, for each of the 23 cases, which test cover
 
 ## Open questions
 
-None open. William Kull answered the scope questions on 2026-10-13, including the conflicts between answers 2A, 3A and 8A, and approved one new test as the outcome.
+None open. William Kull answered the scope questions on 2026-10-13, including the conflicts between answers 2A, 3A and 8A, and approved one new test as the outcome. Amended 2026-10-13: he later decided to keep a second test file for the same case 18, so the outcome is two files for one case.
