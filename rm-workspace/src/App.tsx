@@ -4,22 +4,39 @@ import { CaseView } from "./onboarding/CaseView";
 import { fetchCases, type CaseSummary } from "./onboarding/api";
 import { currentSession } from "./auth/session";
 
+type CaseLoad =
+  | { state: "loading" }
+  | { state: "failed" }
+  | { state: "loaded"; cases: CaseSummary[] };
+
 export function App() {
   const session = currentSession();
-  const [cases, setCases] = useState<CaseSummary[]>([]);
+  const [load, setLoad] = useState<CaseLoad>({ state: "loading" });
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let current = true;
     fetchCases()
       .then((loaded) => {
-        setCases(loaded);
-        setSelectedCaseId((current) => current ?? loaded[0]?.caseId ?? null);
+        if (current) {
+          setLoad({ state: "loaded", cases: loaded });
+          setSelectedCaseId((selected) => selected ?? loaded[0]?.caseId ?? null);
+        }
       })
-      .catch((failure: Error) => setError(failure.message));
+      .catch(() => {
+        if (current) {
+          setLoad({ state: "failed" });
+        }
+      });
+    return () => {
+      current = false;
+    };
   }, []);
 
-  const selected = cases.find((onboardingCase) => onboardingCase.caseId === selectedCaseId);
+  const selected =
+    load.state === "loaded"
+      ? load.cases.find((onboardingCase) => onboardingCase.caseId === selectedCaseId)
+      : undefined;
 
   return (
     <div className="workspace">
@@ -34,12 +51,19 @@ export function App() {
       <main>
         <aside className="cases">
           <h2>Onboarding</h2>
-          {error ? <p className="error">{error}</p> : null}
-          <CaseList cases={cases} selectedCaseId={selectedCaseId} onSelect={setSelectedCaseId} />
+          {load.state === "loading" ? <p className="subdued">Loading.</p> : null}
+          {load.state === "failed" ? <p className="error">Cases are unavailable right now.</p> : null}
+          {load.state === "loaded" ? (
+            <CaseList cases={load.cases} selectedCaseId={selectedCaseId} onSelect={setSelectedCaseId} />
+          ) : null}
         </aside>
 
         <section className="detail-pane">
-          {selected ? <CaseView onboardingCase={selected} /> : <p className="empty">Select a case.</p>}
+          {selected ? (
+            <CaseView onboardingCase={selected} />
+          ) : load.state === "loaded" ? (
+            <p className="empty">Select a case.</p>
+          ) : null}
         </section>
       </main>
     </div>
