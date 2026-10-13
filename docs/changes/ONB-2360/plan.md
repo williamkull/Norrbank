@@ -2,7 +2,9 @@
 
 Jira: ONB-2360 · Governs: `spec.md` (B1-B4, "The test must not", constraints 1-4) · Case: `test-plan.md` row 18
 
-Read, not run. `rm-workspace/node_modules` does not exist until `bun install`, so nothing below has been executed yet.
+**Amendment, 2026-10-13 (renamed from `design.md`, which REVIEW.md:15 does not name).** This document was written before anything was run, and the sections below are kept as approved. What changed since: the design file was renamed to `plan.md`; the case 18 test was written and runs; a second test file for the same case was added and kept by William Kull's decision (2026-10-13). Where a statement below says nothing was run, that one file is the only file added, that a rejected-fetch test is not included, or that no other test is added, the amendments in the places marked "Amended" give the current facts. This revision goes back to William Kull for approval.
+
+Original note, as approved: read, not run. `rm-workspace/node_modules` did not exist until `bun install`, so nothing below had been executed. **Amended:** the platform check on commit b549b4e passed: `tsc` clean, 9 test files, 106 tests. The Java suites and Playwright were not run. The done check is `cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test`; `make build`, `make test` and `make lint` are not run (no JDK, spec C1). No test is skipped or marked known-failing (spec C2).
 
 ## Context
 
@@ -19,7 +21,8 @@ As built:
 
 | # | File | Change |
 |---|---|---|
-| 1 | `rm-workspace/src/__tests__/CaseView.statusFailed.test.tsx` | **New. The only file added.** One `describe("CaseView")`, one `it`. |
+| 1 | `rm-workspace/src/__tests__/CaseView.statusFailed.test.tsx` | **New.** One `describe("CaseView")`, one `it`: a 500 from the status fetch. **Amended:** no longer the only file added, see row 2. |
+| 2 | `rm-workspace/src/__tests__/CaseView.statusFailed.independent.test.tsx` | **Amended, added after approval.** Written by the independent tester in the Test stage for the same case 18: a rejected status fetch (`ONB-2026-000831`). William Kull decided on 2026-10-13 to keep it. |
 
 The name follows the sibling convention `<Component>.<aspect>.test.tsx` (`StatusPanel.retry.independent.test.tsx`, `App.caseList.test.tsx`). It matches the vitest `include` (`src/**/*.{test,spec}.{ts,tsx}`) and is covered by `tsc --noEmit` (`include: ["src"]`).
 
@@ -76,7 +79,7 @@ The case id and path appear once, as `CASE_ID`; the expected path is built from 
 
 **Isolation from `held` / `inFlight`.** By a unique id: `ONB-2026-000830` is used by this test and no other, and the test file runs in its own module registry (vitest isolates files by default), so nothing from other files carries over. `vi.resetModules()` is not needed, and is not used, because `CaseView` and `StatusPanel` are imported statically and re-importing them would split the module from the one the render uses. The same failure is never stored in `held` (the code keeps only successes), so even this test's own state is clean on a re-run.
 
-**Not included:** a second `it` for a rejected fetch. The spec calls it a second case of the same behaviour, and the brief says the change is one test. If wanted, it is a separate id (`ONB-2026-000831`) and one `mockRejectedValue`.
+**Not included (as approved):** a second `it` for a rejected fetch. **Amended 2026-10-13:** the rejected-fetch test now exists, as the separate file in row 2 under id `ONB-2026-000831`, and is kept. It is a second file, not a second `it` in the first file.
 
 Typing: no `any`; `Response` and `vi.fn` typed as in `App.pinned.test.tsx`; `toBeDefined()`, not `jest-dom`. `fetcher.mock.calls[0][0]` is `unknown`-safe through `String(...)`. `noUnusedLocals` is on, so import only what is used.
 
@@ -92,7 +95,7 @@ Typing: no `any`; `Response` and `vi.fn` typed as in `App.pinned.test.tsx`; `toB
 ## Risks
 
 1. **Nothing in the built code makes B1-B4 unprovable as written.** I checked each against `CaseView.tsx` and `StatusPanel.tsx`. B2 "no procedure code" holds trivially for a 500 (the code is never available). It is covered by the whole-text equality in B2(a), not by looking for a particular code, and I flag that the fixture does not put a code anywhere it could leak.
-2. **Pass on a first run is unverified.** Not run (no `node_modules`). If the test fails against the built code, the fault goes into `docs/changes/ONB-2360/` as a note for a new issue and the test file is removed from the change. It is not skipped, not marked known-failing, and no production file is fixed (spec C2, constraint 4).
+2. **Pass on a first run is unverified.** *(Amended: both files now pass in the platform check on b549b4e and in repeated runs of the two files alone.)* As approved: not run (no `node_modules`). If the test fails against the built code, the fault goes into `docs/changes/ONB-2360/` as a note for a new issue and the test file is removed from the change. It is not skipped, not marked known-failing, and no production file is fixed (spec C2, constraint 4).
 3. **B2(a) is strict on purpose.** If the failure markup gets an icon, a heading change or another copy edit, the equality fails. That is the point of case 18, but it will fail on a copy approval too. The sentence is in `StatusPanel.tsx` and in two existing tests already.
 4. **"Status" is ambiguous.** The `dt` "Status" in the Case panel shares the word with the panel title, so no query may find the panel by text. The design finds it by the button.
 5. **Module state across tests in this file.** One `it` means no cross-test leakage. Adding a second `it` later requires a new id.
@@ -101,7 +104,7 @@ Typing: no `any`; `Response` and `vi.fn` typed as in `App.pinned.test.tsx`; `toB
 
 ## Tests
 
-The deliverable is the test. `test-plan.md` row 18 is "written here" and points at this file by name once it exists. No other test is added, edited or skipped.
+The deliverable is the test. `test-plan.md` row 18 is "written here" and points at this file by name once it exists. **Amended:** two test files cover case 18 (rows 1 and 2 above). No other test is added, and none is edited or skipped.
 
 ## Verification
 
@@ -112,3 +115,5 @@ cd rm-workspace && bun install --frozen-lockfile && bun run lint && bun run test
 ```
 
 Paste the output. Say plainly in the report that `make build`, `make test` and `make lint` were **not run**: there is no JDK 21 here and `check-java` exits 1 (spec C1, decided 2026-10-13). Say also that Java cases 1-13 and Playwright were not run.
+
+**Amended 2026-10-13:** the front-end command passed on b549b4e with `tsc` clean, 9 test files and 106 tests, and again after the review fixes with the same counts.
