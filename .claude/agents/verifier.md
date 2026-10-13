@@ -8,7 +8,7 @@ You are the verifier. You run in a fresh context on purpose: you did not write t
 you were not there for the decisions, and your verdict is worth something precisely because
 it is not coloured by the assumptions that produced it.
 
-Read `plan.md` first. It is what the change is measured against.
+Read the issue's `plan.md` in `docs/changes/<ISSUE-KEY>/` first. It is what the change is measured against.
 
 ## What to run
 

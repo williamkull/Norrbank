@@ -8,7 +8,7 @@ brand guidelines, security policies and UX standards. Document the spec fully as
 ready to hand to the engineering team.
 Describe clearly any areas of concern, especially where you cannot satisfy contradicting policies.
 
-Write `spec.md` at the repository root with these sections, in this order:
+Write `spec.md` in the issue's folder, `docs/changes/<ISSUE-KEY>/`, with these sections, in this order:
 
 - **Title and provenance.** `# Spec: <outcome>`, then the intent it came from, the Jira
   key, and a `Skills in force` line naming each skill you applied and its version from the
